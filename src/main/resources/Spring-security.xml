@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+             http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/security
+             http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<!-- 该路径下的资源不用验证 -->
+    <http pattern="/loginPage" security="none"></http>
+    
+    <!-- 配置文件详解: https://www.cnblogs.com/yyxxn/p/8080141.html -->
+    <!-- use-expressions详解 : https://blog.csdn.net/hxpjava1/article/details/78066028 -->
+    <!-- auto-config = true 则使用from-login. 如果不使用该属性 则默认为http-basic(没有session)
+    	 use-expressions: true = 启用 SpEL 表达式访问控制,会使得自动配置的 RoleVoter 实效,后者能够使用角色的声明 eg: <intercept-url pattern="/*" access="ROLE_USER"/>
+    	 login-page: 指定的用户自定义的登录页面(后台mappring,也可直接写jsp页面(注意路径))
+    	 login-processing-url: 指定了客户在登录页面中按下 登录按钮时要访问的 URL.
+    	 always-use-default-target: 指定了是否在身份验证通过后总是跳转到default-target-url属性指定的URL
+		 default-target-url: 登录成功以后默认跳转到的页面
+		 authentication-failure-url: 登录失败以后跳转到的页面
+		 username-parameter: 指定登录表单中用户名的input中name，如果这里不配置，则默认为username
+		 password-parameter: 指定登录表单中密码的input中name，如果这里不配置，则默认为password -->
+	<http auto-config="true" use-expressions="true">
+		<!-- 所有路径必须拥有 ROLE_USER 角色 -->
+		<!-- <intercept-url pattern="/*" access="hasRole('ROLE_USER')" /> -->
+		<form-login login-page="/loginPage"
+					login-processing-url="/customLogin"
+					always-use-default-target="true"
+					default-target-url="/user"
+					authentication-failure-url="/login_ssj?error=error" 
+					password-parameter="password" username-parameter="account"/>
+		<!-- logout-success-url: 成功退出以后跳转到的地址(退出系统后转向的URL) -->
+		<!-- logout-url: 指定了用于响应退出系统请求的URL. 其默认值为: /j_spring_security_logout -->
+		<!-- invalidate-session: 指定在退出系统时是否要销毁Session.-->
+		<logout logout-success-url="/loginPage" logout-url="/logout" invalidate-session="true" />
+		<!-- 跨站请求伪造(csrf): true=禁用CSRF机制 -->
+		<!-- csrf详解: https://www.jb51.net/hack/5895.html -->
+		<!-- 利用security解决csrf问题: https://www.jb51.net/article/138161.htm -->
+		<csrf disabled="true"/>
+	</http>
+    
+    <!-- 连接数据库认证(自定义验证) -->
+	<beans:bean id="userService" class="com.yr.security.SecurityProvider"></beans:bean> 
+	<authentication-manager>
+		<authentication-provider ref="userService">
+		</authentication-provider>
+	</authentication-manager>
+	
+</beans:beans>
